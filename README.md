@@ -1,10 +1,11 @@
----
+\---
+
 title: eKYC Spoof and Liveness Detection
 emoji: 🪪
-colorFrom: teal
+colorFrom: green
 colorTo: blue
 sdk: docker
-app_port: 7860
+app\_port: 7860
 pinned: false
 ---
 
@@ -19,14 +20,16 @@ Punjab Engineering College, Application of Machine Learning and Data Analysis La
 
 ## Run locally
 
-    python -m venv venv
-    venv\Scripts\activate
+&#x20;   python -m venv venv
+    venv\\Scripts\\activate
     pip install -r requirements.txt
     python server.py
+
 
 Then open http://localhost:7860 in Chrome or Edge.
 
 ## Known limits
 
-- Genuine users can be rejected in dim light or with a bright window behind them.
-- A second person standing far behind the user can be ignored.
+* Genuine users can be rejected in dim light or with a bright window behind them.
+* A second person standing far behind the user can be ignored.
+
