@@ -1,0 +1,17 @@
+model,test_set,threshold,n,acc,APCER,BPCER,ACER,AUC,EER
+v2 (NUAA only),NUAA test,0.5,4519,0.7407,0.3453,0.1126,0.229,0.8853,0.2107
+v2 (NUAA only),NUAA test,0.76 (val EER),4519,0.8088,0.1428,0.2738,0.2083,0.8853,0.2107
+v2 (NUAA only),Own test: all attacks,0.5,1618,0.5822,0.4961,0.285,0.3905,0.6527,0.3743
+v2 (NUAA only),Own test: all attacks,0.76 (val EER),1618,0.6601,0.1405,0.6783,0.4094,0.6527,0.3743
+v2 (NUAA only),Own test: screen only,0.5,1200,0.5442,0.6267,0.285,0.4558,0.5765,0.4283
+v2 (NUAA only),Own test: screen only,0.76 (val EER),1200,0.5625,0.1967,0.6783,0.4375,0.5765,0.4283
+v2 (NUAA only),Own test: print only,0.5,1018,0.7053,0.3086,0.285,0.2968,0.7621,0.2897
+v2 (NUAA only),Own test: print only,0.76 (val EER),1018,0.5756,0.0598,0.6783,0.3691,0.7621,0.2897
+v3 (NUAA + own),NUAA test,0.5,4519,0.8714,0.1081,0.1636,0.1358,0.9459,0.1354
+v3 (NUAA + own),NUAA test,0.40 (val EER),4519,0.8659,0.1298,0.1414,0.1356,0.9459,0.1354
+v3 (NUAA + own),Own test: all attacks,0.5,1618,1.0,0.0,0.0,0.0,1.0,0.0
+v3 (NUAA + own),Own test: all attacks,0.40 (val EER),1618,1.0,0.0,0.0,0.0,1.0,0.0
+v3 (NUAA + own),Own test: screen only,0.5,1200,1.0,0.0,0.0,0.0,1.0,0.0
+v3 (NUAA + own),Own test: screen only,0.40 (val EER),1200,1.0,0.0,0.0,0.0,1.0,0.0
+v3 (NUAA + own),Own test: print only,0.5,1018,1.0,0.0,0.0,0.0,1.0,0.0
+v3 (NUAA + own),Own test: print only,0.40 (val EER),1018,1.0,0.0,0.0,0.0,1.0,0.0

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>eKYC Verification</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #171e27; --panel2: #1e2733; --line: #2a3644;
+    --text: #e8edf3; --muted: #93a1b3; --accent: #4c9aff;
+    --ok: #2ecc71; --bad: #ff5c5c; --warn: #f5c542;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 22px 28px 10px; max-width: 1040px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .steps { display: flex; gap: 10px; max-width: 1040px; margin: 14px auto 0; padding: 0 28px; }
+  .step { flex: 1; padding: 9px 12px; border-radius: 10px; background: var(--panel);
+          color: var(--muted); font-size: 14px; border: 1px solid var(--line); }
+  .step b { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center;
+            border-radius: 50%; background: var(--panel2); margin-right: 8px; font-size: 13px; }
+  .step.active { color: var(--text); border-color: var(--accent); }
+  .step.active b { background: var(--accent); color: #fff; }
+  .step.done b { background: var(--ok); color: #0b1f12; }
+  main { max-width: 1040px; margin: 18px auto 40px; padding: 0 28px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+  h2 { margin: 0 0 4px; font-size: 19px; }
+  p.hint { color: var(--muted); margin: 0 0 18px; font-size: 14.5px; }
+  [hidden] { display: none !important; }
+
+  .drop { display: block; border: 2px dashed var(--line); border-radius: 14px; padding: 34px 16px; text-align: center;
+          color: var(--muted); cursor: pointer; transition: .15s; background: var(--panel2); }
+  .drop:hover, .drop.over { border-color: var(--accent); color: var(--text); }
+  .drop img { max-height: 230px; max-width: 100%; border-radius: 10px; display: block; margin: 0 auto 8px; }
+  select { font: inherit; padding: 9px 12px; border-radius: 10px; background: var(--panel2); color: var(--text);
+           border: 1px solid var(--line); }
+  button { font: inherit; font-weight: 600; padding: 11px 22px; border-radius: 10px; border: 0;
+           background: var(--accent); color: #fff; cursor: pointer; }
+  button:hover:not(:disabled) { filter: brightness(1.1); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .err { color: var(--bad); margin-top: 12px; min-height: 22px; font-size: 14.5px; }
+
+  .live { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 22px; }
+  @media (max-width: 800px) { .live { grid-template-columns: 1fr; } }
+  .cam { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 4/3; }
+  .cam video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
+  .guide { position: absolute; inset: 0; pointer-events: none; }
+  .prompt { position: absolute; left: 0; right: 0; top: 0; padding: 14px 16px; text-align: center;
+            background: linear-gradient(#000c, #0000); font-size: 24px; font-weight: 700; text-shadow: 0 1px 4px #000; }
+  .bar { position: absolute; left: 0; bottom: 0; height: 6px; width: 100%; background: #0007; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--warn); transition: width .12s linear; }
+  .side h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  .idthumb { width: 100%; max-height: 150px; object-fit: contain; background: var(--panel2);
+             border-radius: 10px; margin-bottom: 18px; }
+  .chip { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin-bottom: 8px;
+          background: var(--panel2); border-radius: 10px; border: 1px solid var(--line); font-size: 15px; }
+  .chip.cur { border-color: var(--warn); }
+  .chip .ic { width: 20px; text-align: center; font-weight: 800; }
+  .chip.ok .ic { color: var(--ok); } .chip.no .ic { color: var(--bad); }
+  .meter { height: 8px; background: var(--panel2); border-radius: 6px; overflow: hidden; margin: 6px 0 4px; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .15s; }
+  .notice { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: #3a3014;
+            border: 1px solid #7a6320; color: var(--warn); font-size: 14px; }
+  .note { margin-top: 12px; padding: 10px 14px; border-radius: 10px; background: var(--panel2);
+          border: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  .status { margin-top: 16px; color: var(--muted); font-size: 14.5px; min-height: 22px; }
+
+  .banner { border-radius: 14px; padding: 20px 22px; font-size: 30px; font-weight: 800; letter-spacing: .5px; }
+  .banner.ok { background: #12301f; color: var(--ok); border: 1px solid #1f5a39; }
+  .banner.bad { background: #351616; color: var(--bad); border: 1px solid #66282a; }
+  .check { display: flex; gap: 14px; padding: 14px 16px; margin-top: 12px; border-radius: 12px;
+           background: var(--panel2); border: 1px solid var(--line); }
+  .check .badge { flex: none; width: 56px; text-align: center; font-weight: 800; font-size: 13px;
+                  padding: 4px 0; border-radius: 8px; height: 26px; }
+  .check.ok .badge { background: #12301f; color: var(--ok); }
+  .check.bad .badge { background: #351616; color: var(--bad); }
+  .check b { display: block; } .check span { color: var(--muted); font-size: 14px; }
+  footer { max-width: 1040px; margin: 0 auto 30px; padding: 0 28px; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>eKYC Verification</h1>
+  <div class="sub">Identity match &middot; random-challenge liveness &middot; spoof detection</div>
+</header>
+<div class="steps">
+  <div class="step active" id="s1"><b>1</b>Upload ID</div>
+  <div class="step" id="s2"><b>2</b>Live check</div>
+  <div class="step" id="s3"><b>3</b>Result</div>
+</div>
+
+<main>
+  <!-- STEP 1 -->
+  <section id="step1">
+    <h2>Upload your ID card photo</h2>
+    <p class="hint">A clear photo where your face is visible. It stays on this computer.</p>
+    <label class="drop" id="drop">
+      <div id="dropText">Click to choose a photo, or drag it here<br><small>JPG or PNG</small></div>
+      <input type="file" id="file" accept="image/*" hidden>
+    </label>
+    <div class="err" id="err1"></div>
+    <div class="row"><button id="btnUpload" disabled>Continue</button></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="step2" hidden>
+    <h2>Live check</h2>
+    <p class="hint">Sit in good light and look at the camera. Do exactly what the screen asks, quickly.</p>
+    <div class="live">
+      <div class="cam">
+        <video id="video" autoplay playsinline muted></video>
+        <svg class="guide" viewBox="0 0 100 75" preserveAspectRatio="none">
+          <ellipse cx="50" cy="37" rx="19" ry="26" fill="none" stroke="#ffffff55" stroke-width=".5" stroke-dasharray="2 2"/>
+        </svg>
+        <div class="prompt" id="prompt"></div>
+        <div class="bar"><i id="timer"></i></div>
+      </div>
+      <div class="side">
+        <h3>Your ID</h3>
+        <img class="idthumb" id="idthumb" alt="ID">
+        <h3>Challenges</h3>
+        <div id="chips"></div>
+        <h3 style="margin-top:14px">Live face score</h3>
+        <div class="meter"><i id="meter"></i></div>
+        <div class="notice" id="notice" hidden>Extra verification needed: the first result was borderline, so a few more actions are required.</div>
+        <div class="status" id="status">Starting camera&hellip;</div>
+      </div>
+    </div>
+    <div class="err" id="err2"></div>
+    <div class="row" id="testrow" style="align-items:center" hidden>
+      <label for="atype" style="color:var(--muted);font-size:14px">This attempt is (for testing):</label>
+      <select id="atype">
+        <option value="">Not specified</option>
+        <option value="genuine">Genuine live face</option>
+        <option value="screen">Photo on phone screen</option>
+        <option value="replay">Video replay on phone</option>
+        <option value="print">Printed photo</option>
+        <option value="wrong_person">Different person</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="row">
+      <button id="btnStart" disabled>Start verification</button>
+      <button class="ghost" id="btnBack">Back</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="step3" hidden>
+    <div class="banner" id="banner"></div>
+    <div id="checks"></div>
+    <div class="row">
+      <button id="btnRetry">Try again</button>
+      <button class="ghost" id="btnNew">Use another ID</button>
+      <button class="ghost" id="btnReport">Download report</button>
+    </div>
+  </section>
+</main>
+<footer>Demo project. Camera frames are processed by a server running on this computer only.</footer>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let sessionId = null, stream = null, running = false, lastFinal = null, idFile = null;
+
+function setStep(n) {
+  [1, 2, 3].forEach(i => {
+    $("step" + i).hidden = i !== n;
+    const s = $("s" + i);
+    s.classList.toggle("active", i === n);
+    s.classList.toggle("done", i < n);
+  });
+}
+
+/* ---------------- step 1: upload ---------------- */
+const drop = $("drop"), fileInput = $("file");
+// test labels are only shown when the page is opened as  http://127.0.0.1:5000/?test=1
+if (/[?&]test=1/.test(location.search)) $("testrow").hidden = false;
+function showPreview(file) {
+  idFile = file;
+  const url = URL.createObjectURL(file);
+  $("dropText").innerHTML = "";
+  const img = document.createElement("img"); img.src = url;
+  const cap = document.createElement("div"); cap.textContent = file.name;
+  $("dropText").append(img, cap);
+  $("idthumb").src = url;
+  $("btnUpload").disabled = false;
+  $("err1").textContent = "";
+}
+fileInput.addEventListener("change", () => { if (fileInput.files[0]) showPreview(fileInput.files[0]); });
+["dragenter", "dragover"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", ev => { const f = ev.dataTransfer.files[0]; if (f) showPreview(f); });
+
+$("btnUpload").addEventListener("click", async () => {
+  $("btnUpload").disabled = true; $("err1").textContent = "Checking the ID photo...";
+  try {
+    const fd = new FormData(); fd.append("id_image", idFile);
+    const r = await fetch("/api/upload_id", { method: "POST", body: fd });
+    const j = await r.json();
+    if (!r.ok) { $("err1").textContent = j.error || "Upload failed"; $("btnUpload").disabled = false; return; }
+    sessionId = j.session_id; $("err1").textContent = "";
+    setStep(2); openCamera();
+  } catch (e) {
+    $("err1").textContent = "Could not reach the server. Is web_app.py still running?";
+    $("btnUpload").disabled = false;
+  }
+});
+
+/* ---------------- step 2: camera + loop ---------------- */
+async function openCamera() {
+  $("err2").textContent = ""; $("status").textContent = "Starting camera...";
+  $("prompt").textContent = ""; $("chips").innerHTML = ""; $("timer").style.width = "0";
+  $("meter").style.width = "0"; $("btnStart").disabled = true; $("notice").hidden = true;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+    $("video").srcObject = stream;
+    $("status").textContent = "Camera ready. Click Start verification.";
+    $("btnStart").disabled = false;
+  } catch (e) {
+    $("err2").textContent = "Camera not available. Allow camera access in the browser and close other apps using it.";
+    $("status").textContent = "";
+  }
+}
+function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+$("btnStart").addEventListener("click", async () => {
+  $("btnStart").disabled = true; $("err2").textContent = "";
+  try {
+    const r = await fetch("/api/start", { method: "POST", headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ session_id: sessionId, attempt_type: $("atype").value }) });
+    if (!r.ok) throw new Error("start failed");
+  } catch (e) { $("err2").textContent = "Could not start. Reload the page and try again."; return; }
+  running = true; loop();
+});
+$("btnBack").addEventListener("click", () => { running = false; stopCamera(); setStep(1); });
+
+async function loop() {
+  const video = $("video"), canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+  while (running) {
+    const t0 = performance.now();
+    const scale = Math.min(1, 640 / (video.videoWidth || 640));
+    canvas.width = Math.round((video.videoWidth || 640) * scale);
+    canvas.height = Math.round((video.videoHeight || 480) * scale);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);   // un-mirrored frame (the server mirrors it)
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.8));
+    try {
+      const fd = new FormData(); fd.append("session_id", sessionId); fd.append("frame", blob, "f.jpg");
+      const r = await fetch("/api/frame", { method: "POST", body: fd });
+      const st = await r.json();
+      if (!r.ok) throw new Error(st.error || "frame error");
+      render(st);
+      if (st.final) { running = false; showResult(st.final); return; }
+    } catch (e) {
+      running = false; $("err2").textContent = "Lost connection to the server: " + e.message;
+      $("btnStart").disabled = false; return;
+    }
+    await sleep(Math.max(0, 80 - (performance.now() - t0)));
+  }
+}
+
+function render(st) {
+  // prompt + countdown
+  let text = "";
+  if (st.state === "calibrating") text = st.face_found ? "Look straight, neutral face" : "Show your face to the camera";
+  else if (st.state === "running") text = st.message === "Get ready" ? "Get ready..." : st.prompt;
+  if (st.warning) text = "\u26A0 " + st.warning;
+  $("prompt").textContent = text;
+  $("prompt").style.color = st.warning ? "#ff6b6b" : "";
+  $("timer").style.width = (st.state === "running" && st.time_left != null && st.message !== "Get ready")
+    ? Math.max(0, st.time_left / st.timeout * 100) + "%" : "0";
+  // challenge chips: only finished + current (upcoming ones stay hidden)
+  const chips = $("chips"); chips.innerHTML = "";
+  st.results.forEach(r => {
+    const d = document.createElement("div"); d.className = "chip " + (r.passed ? "ok" : "no");
+    d.innerHTML = '<span class="ic"></span><span></span>';
+    d.children[0].textContent = r.passed ? "✓" : "✗";
+    d.children[1].textContent = r.label + (r.passed ? " (" + r.seconds + "s)" : "");
+    chips.append(d);
+  });
+  if (st.state === "running") {
+    const d = document.createElement("div"); d.className = "chip cur";
+    d.innerHTML = '<span class="ic"></span><span></span>';
+    d.children[0].textContent = "▶";
+    d.children[1].textContent = "Challenge " + (st.index + 1) + " of " + st.total;
+    chips.append(d);
+  }
+  // live real-score meter
+  $("meter").style.width = st.spoof_live == null ? "0" : Math.round(st.spoof_live * 100) + "%";
+  $("meter").style.background = (st.spoof_live != null && st.spoof_live >= st.spoof_thr) ? "var(--ok)" : "var(--warn)";
+  $("notice").hidden = !st.step_up;
+  $("status").textContent = st.warning ? "\u26A0 " + st.warning : !st.face_found ? "No face found" :
+    (st.state === "calibrating" ? "Measuring your neutral face..." : (st.message === "Get ready" ? "" : ""));
+}
+
+/* ---------------- step 3: result ---------------- */
+function showResult(f) {
+  stopCamera(); lastFinal = f;
+  const b = $("banner");
+  b.textContent = f.verified ? "VERIFIED" : "REJECTED";
+  b.className = "banner " + (f.verified ? "ok" : "bad");
+  const old = document.getElementById("stepnote"); if (old) old.remove();
+  const old2 = document.getElementById("facenote"); if (old2) old2.remove();
+  if (f.checks.single_face && !f.checks.single_face.pass) {
+    const n = document.createElement("div"); n.className = "note"; n.id = "facenote";
+    n.style.borderColor = "#7a2a2a"; n.style.color = "#ff8a8a";
+    n.textContent = "Rejected: more than one person was in view. Make sure only the ID holder is in front of the camera and try again.";
+    b.after(n);
+  }
+  if (f.step_up && f.step_up.triggered) {
+    const n = document.createElement("div"); n.className = "note"; n.id = "stepnote";
+    n.textContent = "Extra verification was required (" + f.step_up.reason + ") and was completed.";
+    b.after(n);
+  }
+  const names = { identity: "Identity match", liveness: "Liveness challenges", spoof: "Spoof detection",
+                  single_face: "One person in view" };
+  const box = $("checks"); box.innerHTML = "";
+  Object.keys(names).forEach(k => {
+    const c = f.checks[k]; if (!c) return;
+    const d = document.createElement("div"); d.className = "check " + (c.pass ? "ok" : "bad");
+    d.innerHTML = '<div class="badge"></div><div><b></b><span></span></div>';
+    d.querySelector(".badge").textContent = c.pass ? "PASS" : "FAIL";
+    d.querySelector("b").textContent = names[k];
+    d.querySelector("span").textContent = c.detail;
+    box.append(d);
+  });
+  setStep(3);
+}
+$("btnRetry").addEventListener("click", () => { setStep(2); openCamera(); });
+$("btnNew").addEventListener("click", () => {
+  idFile = null; fileInput.value = ""; sessionId = null; $("btnUpload").disabled = true;
+  $("dropText").innerHTML = "Click to choose a photo, or drag it here<br><small>JPG or PNG</small>";
+  setStep(1);
+});
+$("btnReport").addEventListener("click", () => {
+  if (!lastFinal) return;
+  const blob = new Blob([JSON.stringify(lastFinal, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "ekyc_report.json"; a.click();
+});
+</script>
+</body>
+</html>
